@@ -35,13 +35,13 @@ public class VoterApi {
 
     @PostMapping("/")
     @ApiOperation(value = "Create new voter")
-    public VoterOutput create(@RequestBody VoterInput voterInput){
+    public VoterOutput create(@RequestBody VoterInput voterInput) throws Exception {
         return voterService.create(voterInput);
     }
 
     @PutMapping("/{voterId}")
     @ApiOperation(value = "Update voter")
-    public VoterOutput update(@PathVariable Long voterId, @RequestBody VoterInput voterInput){
+    public VoterOutput update(@PathVariable Long voterId, @RequestBody VoterInput voterInput) throws Exception {
         return voterService.update(voterId, voterInput);
     }
 
