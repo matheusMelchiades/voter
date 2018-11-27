@@ -1,6 +1,5 @@
 package br.edu.ulbra.election.voter.service;
 
-import br.edu.ulbra.election.voter.config.PasswordConfig;
 import br.edu.ulbra.election.voter.exception.GenericOutputException;
 import br.edu.ulbra.election.voter.input.v1.VoterInput;
 import br.edu.ulbra.election.voter.model.Voter;
@@ -24,6 +23,8 @@ public class VoterService {
 
     private final ModelMapper modelMapper;
 
+    private final PasswordEncoder passwordEncoder;
+
     private static final String MESSAGE_INVALID_ID = "Invalid id";
     private static final String MESSAGE_VOTER_NOT_FOUND = "Voter not found";
 
@@ -31,6 +32,8 @@ public class VoterService {
     public VoterService(VoterRepository voterRepository, ModelMapper modelMapper, PasswordEncoder passwordEncoder){
         this.voterRepository = voterRepository;
         this.modelMapper = modelMapper;
+        this.passwordEncoder = passwordEncoder;
+
     }
 
     public List<VoterOutput> getAll(){
@@ -40,9 +43,10 @@ public class VoterService {
 
     public VoterOutput create(VoterInput voterInput) throws Exception {
         validateInput(voterInput, false);
+        checkEmailDuplicate(voterInput.getEmail(), null);
 
         Voter voter = modelMapper.map(voterInput, Voter.class);
-        voter.setPassword(PasswordConfig.cripting(voter.getPassword()));
+        voter.setPassword(passwordEncoder.encode(voter.getPassword()));
         voter = voterRepository.save(voter);
         return modelMapper.map(voter, VoterOutput.class);
     }
@@ -65,6 +69,7 @@ public class VoterService {
             throw new GenericOutputException(MESSAGE_INVALID_ID);
         }
         validateInput(voterInput, true);
+        checkEmailDuplicate(voterInput.getEmail(), null);
 
         Voter voter = voterRepository.findById(voterId).orElse(null);
         if (voter == null){
@@ -75,7 +80,7 @@ public class VoterService {
         voter.setName(voterInput.getName());
 
         if (!StringUtils.isBlank(voterInput.getPassword())) {
-            voter.setPassword(PasswordConfig.cripting(voterInput.getPassword()));
+            voter.setPassword(passwordEncoder.encode(voterInput.getPassword()));
         }
 
         voter = voterRepository.save(voter);
@@ -95,6 +100,13 @@ public class VoterService {
         voterRepository.delete(voter);
 
         return new GenericOutput("Voter deleted");
+    }
+
+    private void checkEmailDuplicate(String email, Long currentVoter){
+        Voter voter = voterRepository.findFirstByEmail(email);
+        if (voter != null && !voter.getId().equals(currentVoter)){
+            throw new GenericOutputException("Duplicate email");
+        }
     }
 
     private void validateInput(VoterInput voterInput, boolean isUpdate){
