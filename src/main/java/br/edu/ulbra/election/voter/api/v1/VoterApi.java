@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/v1/voter")
 public class VoterApi {
@@ -35,7 +36,7 @@ public class VoterApi {
 
     @PostMapping("/")
     @ApiOperation(value = "Create new voter")
-    public VoterOutput create(@RequestBody VoterInput voterInput) throws Exception {
+    public VoterOutput create(@RequestBody VoterInput voterInput) {
         return voterService.create(voterInput);
     }
 

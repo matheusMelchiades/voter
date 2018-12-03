@@ -27,6 +27,10 @@ public class VoterService {
 
     private static final String MESSAGE_INVALID_ID = "Invalid id";
     private static final String MESSAGE_VOTER_NOT_FOUND = "Voter not found";
+    private static final String MESSAGE_INVALID_EMAIL = "Invalid email";
+    private static final String MESSAGE_INVALID_NAME = "Invalid name";
+    private static final String MESSAGE_INVALID_PASSWORD_NOT_MATCH = "Passwords doesn't match";
+
 
     @Autowired
     public VoterService(VoterRepository voterRepository, ModelMapper modelMapper, PasswordEncoder passwordEncoder){
@@ -41,7 +45,7 @@ public class VoterService {
         return modelMapper.map(voterRepository.findAll(), voterOutputListType);
     }
 
-    public VoterOutput create(VoterInput voterInput) throws Exception {
+    public VoterOutput create(VoterInput voterInput){
         validateInput(voterInput, false);
         checkEmailDuplicate(voterInput.getEmail(), null);
 
@@ -64,7 +68,7 @@ public class VoterService {
         return modelMapper.map(voter, VoterOutput.class);
     }
 
-    public VoterOutput update(Long voterId, VoterInput voterInput) throws Exception{
+    public VoterOutput update(Long voterId, VoterInput voterInput){
         if (voterId == null){
             throw new GenericOutputException(MESSAGE_INVALID_ID);
         }
@@ -111,22 +115,29 @@ public class VoterService {
 
     private void validateInput(VoterInput voterInput, boolean isUpdate){
         if (StringUtils.isBlank(voterInput.getEmail())){
-            throw new GenericOutputException("Invalid email");
+            throw new GenericOutputException(MESSAGE_INVALID_EMAIL);
         }
+
+        if (!(voterInput.getEmail().split("@").length == 2)){
+            if (!(voterInput.getEmail().split("@"))[1].contains(".")){
+                throw new GenericOutputException(MESSAGE_INVALID_EMAIL);
+            }
+        }
+
         if (StringUtils.isBlank(voterInput.getName()) ||
                 (voterInput.getName().split(" ").length < 2) ||
                 (voterInput.getName().trim().replace(" ", "").length() <5))
         {
-            throw new GenericOutputException("Invalid name");
+            throw new GenericOutputException(MESSAGE_INVALID_NAME);
         }
 
         if (!StringUtils.isBlank(voterInput.getPassword())){
             if (!voterInput.getPassword().equals(voterInput.getPasswordConfirm())){
-                throw new GenericOutputException("Passwords doesn't match");
+                throw new GenericOutputException(MESSAGE_INVALID_PASSWORD_NOT_MATCH);
             }
         } else {
             if (!isUpdate) {
-                throw new GenericOutputException("Password doesn't match");
+                throw new GenericOutputException(MESSAGE_INVALID_PASSWORD_NOT_MATCH);
             }
         }
     }

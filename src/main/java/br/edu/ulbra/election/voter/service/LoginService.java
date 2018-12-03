@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -48,8 +50,6 @@ public class LoginService {
         }
 
         Voter voter = voterRepository.findFirstByEmail(loginInput.getEmail());
-
-        System.out.println(voter.getEmail());
 
         if (voter == null){
             throw new GenericOutputException(INVALID_CREDENTIALS);
@@ -102,6 +102,10 @@ public class LoginService {
 
     private String generateToken(Voter voter, Date expireDate){
         String openToken = String.format("%s%s%s", voter.getEmail(), voter.getName(), expireDate.toString());
-        return passwordEncoder.encode(openToken);
+
+        openToken = new String(Base64.getEncoder().encode(passwordEncoder.encode(openToken).getBytes(StandardCharsets.UTF_8)));
+
+        return openToken;
+
     }
 }
